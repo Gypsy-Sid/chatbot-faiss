@@ -7,6 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 import os
+import threading
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
@@ -86,8 +87,8 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    # 🔐 Log to Google Sheets
-    log_to_google_sheets(query.question)
+    # 🔐 Log to Google Sheets in background
+    threading.Thread(target=log_to_google_sheets, args=(query.question,), daemon=True).start()
 
     # 🧠 Format chat history
     history = query.chat_history
