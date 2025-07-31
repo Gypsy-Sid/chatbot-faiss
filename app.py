@@ -103,7 +103,7 @@ def chat(query: QueryRequest):
 
     answer = result["answer"]
 
-    # 🧾 Log in background
+    # 🧾 Log question & answer with timestamp
     threading.Thread(
         target=log_to_google_sheets,
         args=(query.question, answer, "anonymous"),
@@ -113,11 +113,9 @@ def chat(query: QueryRequest):
     return {"response": answer}
 
 # === Logging function ===
-def log_to_google_sheets(question: str, answer: str):
+def log_to_google_sheets(question: str, answer: str, user: str):
     try:
         timestamp = datetime.now().isoformat()
-        user = "anonymous"  # You can customize this if user info is available
-
         response = requests.post(
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
             json={
@@ -131,4 +129,3 @@ def log_to_google_sheets(question: str, answer: str):
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
     except Exception as e:
         print("❌ Logging error:", e)
-
