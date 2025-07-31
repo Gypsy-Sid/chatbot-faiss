@@ -87,18 +87,26 @@ class QueryRequest(BaseModel):
     question: str
     chat_history: list
 
-@app.post("/chat")
+   @app.post("/chat")
 def chat(query: QueryRequest):
+    # 🔐 Log to Google Sheets
+    log_to_google_sheets(query.question)
+
     # Format chat history
     history = query.chat_history
     formatted_history = []
     for i in range(0, len(history) - 1, 2):
         user_msg = history[i]["content"]
-        ai_msg = history[i+1]["content"]
+        ai_msg = history[i + 1]["content"]
         formatted_history.append((user_msg, ai_msg))
 
-    # 🔐 Log this interaction
- 
+    # 🔁 Run the chain
+    result = qa_chain.invoke({
+        "question": query.question,
+        "chat_history": formatted_history
+    })
+    return {"response": result["answer"]}
+
 
 def log_to_google_sheets(question: str):
     try:
@@ -111,15 +119,4 @@ def log_to_google_sheets(question: str):
     except Exception as e:
         print("❌ Logging error:", e)
 
-
-@app.post("/chat")
-def chat(query: QueryRequest):
-    log_to_google_sheets(query.question)
-    ...
-
-    result = qa_chain.invoke({
-        "question": query.question,
-        "chat_history": formatted_history
-    })
-    return {"response": result["answer"]}
 
