@@ -98,13 +98,19 @@ def chat(query: QueryRequest):
         formatted_history.append((user_msg, ai_msg))
 
     # 🔐 Log this interaction
-   def log_to_google_sheets(question):
+ 
+
+def log_to_google_sheets(question: str):
     try:
-        requests.post("https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec", json={
-            "question": question
-        })
+        response = requests.post(
+            "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
+            json={"question": question}
+        )
+        if response.status_code != 200:
+            print(f"⚠️ Google Sheets logging failed: {response.status_code}")
     except Exception as e:
-        print("❌ Log failed:", e)
+        print("❌ Logging error:", e)
+
 
 @app.post("/chat")
 def chat(query: QueryRequest):
