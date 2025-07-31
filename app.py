@@ -68,7 +68,9 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     question: str
-    chat_history: list = []
+    # 🔥 Remove this:
+    # chat_history: list = []
+
 
 @app.post("/chat")
 def chat(query: QueryRequest):
