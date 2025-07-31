@@ -113,20 +113,22 @@ def chat(query: QueryRequest):
     return {"response": answer}
 
 # === Logging function ===
-def log_to_google_sheets(question: str, answer: str, user_info: str):
+def log_to_google_sheets(question: str, answer: str):
     try:
         timestamp = datetime.now().isoformat()
-        payload = {
-            "timestamp": timestamp,
-            "question": question,
-            "answer": answer,
-            "user": user_info
-        }
+        user = "anonymous"  # You can customize this if user info is available
+
         response = requests.post(
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
-            json=payload
+            json={
+                "timestamp": timestamp,
+                "user": user,
+                "question": question,
+                "answer": answer
+            }
         )
         if response.status_code != 200:
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
     except Exception as e:
         print("❌ Logging error:", e)
+
