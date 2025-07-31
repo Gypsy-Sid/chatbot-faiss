@@ -22,14 +22,19 @@ CHUNK_OVERLAP = 200
 # === Load and Embed ===
 def load_all_texts(data_dir):
     all_docs = []
+    print(f"🔍 Scanning folder: {data_dir}")
     for root, _, files in os.walk(data_dir):
+        print(f"📁 Checking: {root}")
         for file in files:
+            print(f"📄 Found file: {file}")
             if file.endswith(".txt"):
                 path = os.path.join(root, file)
+                print(f"✅ Loading: {path}")
                 loader = TextLoader(path, encoding="utf-8")
                 docs = loader.load()
                 all_docs.extend(docs)
     return all_docs
+
 
 print("📄 Loading documents...")
 raw_docs = load_all_texts(DATA_DIR)
