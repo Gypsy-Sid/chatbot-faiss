@@ -17,7 +17,7 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 
-# 🎙️ Custom tone and fallback behavior
+# 🎙️ Friendly tone prompt
 system_template = (
     "You are Genie, a friendly product expert for a B2B mobile accessories platform. "
     "You speak casually like a helpful friend of the retailer. Always keep replies short, clear, and product-focused. "
@@ -64,7 +64,7 @@ retriever = vectorstore.as_retriever()
 
 llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, openai_api_key=openai_api_key)
 
-# ❌ No memory used
+# 🔁 QA Chain setup
 qa_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
@@ -87,9 +87,6 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    # 🔐 Log to Google Sheets in background
-    threading.Thread(target=log_to_google_sheets, args=(query.question,), daemon=True).start()
-
     # 🧠 Format chat history
     history = query.chat_history
     formatted_history = []
@@ -105,18 +102,29 @@ def chat(query: QueryRequest):
     })
 
     answer = result["answer"]
-    # Log question and response
-    log_to_google_sheets(query.question, answer)
 
-    return {"response": result["answer"]}
+    # 🧾 Log in background
+    threading.Thread(
+        target=log_to_google_sheets,
+        args=(query.question, answer, "anonymous"),
+        daemon=True
+    ).start()
+
+    return {"response": answer}
 
 # === Logging function ===
-def log_to_google_sheets(question: str, answer: str):
-
+def log_to_google_sheets(question: str, answer: str, user_info: str):
     try:
+        timestamp = datetime.now().isoformat()
+        payload = {
+            "timestamp": timestamp,
+            "question": question,
+            "answer": answer,
+            "user": user_info
+        }
         response = requests.post(
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
-            json={"question": question, "answer": answer}
+            json=payload
         )
         if response.status_code != 200:
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
