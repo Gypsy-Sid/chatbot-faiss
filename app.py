@@ -15,7 +15,7 @@ load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # === Constants ===
-DATA_DIR = "chatbot_data"
+DATA_DIR = "Chatbot_data"
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
