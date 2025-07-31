@@ -72,5 +72,6 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    result = qa_chain.invoke({"question": query.question, "chat_history": query.chat_history})
+    result = qa_chain.invoke({"question": query.question})  # 🔥 Remove chat_history here
     return {"response": result["answer"]}
+
