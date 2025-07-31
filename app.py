@@ -53,9 +53,12 @@ memory = ConversationBufferWindowMemory(k=3, return_messages=True)
 qa_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
-    memory=memory,
+    memory=ConversationBufferWindowMemory(
+        memory_key="chat_history", return_messages=True, k=3
+    ),
     verbose=True
 )
+
 
 # === FastAPI setup ===
 app = FastAPI()
@@ -74,6 +77,7 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    result = qa_chain.invoke({"question": query.question})  # 🔥 Remove chat_history here
+    result = qa_chain.invoke({"question": query.question})
     return {"response": result["answer"]}
+
 
