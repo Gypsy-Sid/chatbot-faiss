@@ -22,12 +22,15 @@ system_template = (
     "If you're unsure about the answer or it’s outside product details, say:\n"
     "'I'm not sure about this. You can call or WhatsApp our support team for help.'"
 )
+
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
-human_message_prompt = HumanMessagePromptTemplate.from_template("{question}")
+human_context_prompt = HumanMessagePromptTemplate.from_template("Relevant info:\n{context}")
+human_question_prompt = HumanMessagePromptTemplate.from_template("{question}")
 
 chat_prompt = ChatPromptTemplate.from_messages([
     system_message_prompt,
-    human_message_prompt
+    human_context_prompt,
+    human_question_prompt
 ])
 
 LOG_FILE = "chat_logs.txt"
@@ -67,6 +70,7 @@ qa_chain = ConversationalRetrievalChain.from_llm(
     combine_docs_chain_kwargs={"prompt": chat_prompt},
     verbose=True
 )
+
 
 
 # API setup
