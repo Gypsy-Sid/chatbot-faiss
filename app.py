@@ -7,6 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 import os
+import requests
 from dotenv import load_dotenv
 from datetime import datetime
 from langchain.prompts import (
@@ -97,8 +98,18 @@ def chat(query: QueryRequest):
         formatted_history.append((user_msg, ai_msg))
 
     # 🔐 Log this interaction
-    with open(LOG_FILE, "a") as f:
-        f.write(f"[{datetime.now()}] USER: {query.question}\n")
+   def log_to_google_sheets(question):
+    try:
+        requests.post("https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec", json={
+            "question": question
+        })
+    except Exception as e:
+        print("❌ Log failed:", e)
+
+@app.post("/chat")
+def chat(query: QueryRequest):
+    log_to_google_sheets(query.question)
+    ...
 
     result = qa_chain.invoke({
         "question": query.question,
