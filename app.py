@@ -15,6 +15,7 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+
 # 🎙️ Custom tone and fallback behavior
 system_template = (
     "You are Genie, a friendly product expert for a B2B mobile accessories platform. "
@@ -33,8 +34,6 @@ chat_prompt = ChatPromptTemplate.from_messages([
     human_context_prompt,
     human_question_prompt
 ])
-
-LOG_FILE = "chat_logs.txt"
 
 # Load env
 load_dotenv()
@@ -72,9 +71,7 @@ qa_chain = ConversationalRetrievalChain.from_llm(
     verbose=True
 )
 
-
-
-# API setup
+# === API setup ===
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -87,12 +84,12 @@ class QueryRequest(BaseModel):
     question: str
     chat_history: list
 
-   @app.post("/chat")
+@app.post("/chat")
 def chat(query: QueryRequest):
     # 🔐 Log to Google Sheets
     log_to_google_sheets(query.question)
 
-    # Format chat history
+    # 🧠 Format chat history
     history = query.chat_history
     formatted_history = []
     for i in range(0, len(history) - 1, 2):
@@ -100,14 +97,14 @@ def chat(query: QueryRequest):
         ai_msg = history[i + 1]["content"]
         formatted_history.append((user_msg, ai_msg))
 
-    # 🔁 Run the chain
+    # 🎯 Run the QA chain
     result = qa_chain.invoke({
         "question": query.question,
         "chat_history": formatted_history
     })
     return {"response": result["answer"]}
 
-
+# === Logging function ===
 def log_to_google_sheets(question: str):
     try:
         response = requests.post(
@@ -118,5 +115,3 @@ def log_to_google_sheets(question: str):
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
     except Exception as e:
         print("❌ Logging error:", e)
-
-
