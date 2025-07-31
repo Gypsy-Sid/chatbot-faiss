@@ -8,6 +8,29 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+from langchain.prompts import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+# 🎙️ Custom tone and fallback behavior
+system_template = (
+    "You are Genie, a friendly product expert for a B2B mobile accessories platform. "
+    "You speak casually like a helpful friend of the retailer. Always keep replies short, clear, and product-focused. "
+    "Ask follow-up questions if you need more info to assist. "
+    "If you're unsure about the answer or it’s outside product details, say:\n"
+    "'I'm not sure about this. You can call or WhatsApp our support team for help.'"
+)
+system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
+human_message_prompt = HumanMessagePromptTemplate.from_template("{question}")
+
+chat_prompt = ChatPromptTemplate.from_messages([
+    system_message_prompt,
+    human_message_prompt
+])
+
+LOG_FILE = "chat_logs.txt"
 
 # Load env
 load_dotenv()
@@ -41,8 +64,10 @@ llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, openai_api_key=openai_a
 qa_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
+    combine_docs_chain_kwargs={"prompt": chat_prompt},
     verbose=True
 )
+
 
 # API setup
 app = FastAPI()
@@ -59,14 +84,17 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    # Convert [{role, content}] → [("user", "ai"), ...] → then only pairs
+    # Format chat history
     history = query.chat_history
     formatted_history = []
-
     for i in range(0, len(history) - 1, 2):
         user_msg = history[i]["content"]
         ai_msg = history[i+1]["content"]
         formatted_history.append((user_msg, ai_msg))
+
+    # 🔐 Log this interaction
+    with open(LOG_FILE, "a") as f:
+        f.write(f"[{datetime.now()}] USER: {query.question}\n")
 
     result = qa_chain.invoke({
         "question": query.question,
