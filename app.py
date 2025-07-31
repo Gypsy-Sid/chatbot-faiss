@@ -127,7 +127,7 @@ def log_to_google_sheets(question: str, answer: str, user: str):
 
         response = requests.post(
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
-            json={
+            json=payload
         )
         
         if response.status_code != 200:
