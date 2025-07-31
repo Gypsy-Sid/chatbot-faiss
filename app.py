@@ -59,8 +59,18 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
+    # Convert [{role, content}] → [("user", "ai"), ...] → then only pairs
+    history = query.chat_history
+    formatted_history = []
+
+    for i in range(0, len(history) - 1, 2):
+        user_msg = history[i]["content"]
+        ai_msg = history[i+1]["content"]
+        formatted_history.append((user_msg, ai_msg))
+
     result = qa_chain.invoke({
         "question": query.question,
-        "chat_history": query.chat_history
+        "chat_history": formatted_history
     })
     return {"response": result["answer"]}
+
