@@ -103,6 +103,11 @@ def chat(query: QueryRequest):
         "question": query.question,
         "chat_history": formatted_history
     })
+
+    answer = result["answer"]
+    # Log question and response
+    log_to_google_sheets(query.question, answer)
+
     return {"response": result["answer"]}
 
 # === Logging function ===
@@ -110,7 +115,7 @@ def log_to_google_sheets(question: str):
     try:
         response = requests.post(
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
-            json={"question": question}
+            json={"question": question, "answer": answer}
         )
         if response.status_code != 200:
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
