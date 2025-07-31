@@ -9,7 +9,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
-COPY . .
+COPY chatbot_data/ chatbot_data/
+COPY app.py .
+COPY requirements.txt .
+
 
 # Expose port
 EXPOSE 8000
