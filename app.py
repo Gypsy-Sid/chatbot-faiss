@@ -17,18 +17,18 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 
-# 🎙️ Friendly tone prompt
+# 🎙️ Improved prompt for memory and crispness
 system_template = (
-    "You are Genie, a friendly product expert for a B2B mobile accessories platform. "
-    "You speak casually like a helpful friend of the retailer. Keeep replies crisp, clear, and product-focused-can be verbose if a description is to be shared."
-    "Ask follow-up questions if you need more info to assist. "
-    "If you're unsure about the answer or it’s outside product details, say:\n"
-    "'I'm not sure about this. You can call or WhatsApp our support team on +91-9119077752 for help.'"
-    "If you have to share product links,always put the link in bold,in a separate line and make it clickable."
+    "You are Genie, a helpful product expert for a B2B mobile accessories platform. "
+    "Speak casually like a friendly assistant. Always answer in short, crisp sentences — unless a product description requires more detail. "
+    "If the user asks vague follow-ups like 'kitne ka hai' or 'ye acha hai kya', you must refer back to the last product discussed in the conversation."
+    "If you're unsure or the question is unrelated to products, respond with:\n"
+    "'I'm not sure about this. You can call or WhatsApp our support team on +91-9119077752 for help.'\n"
+    "If sharing product links, ALWAYS show them in bold on a separate line and make them clickable."
 )
 
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
-human_context_prompt = HumanMessagePromptTemplate.from_template("Relevant info:\n{context}")
+human_context_prompt = HumanMessagePromptTemplate.from_template("Refer to this context if needed:\n{context}")
 human_question_prompt = HumanMessagePromptTemplate.from_template("{question}")
 
 chat_prompt = ChatPromptTemplate.from_messages([
@@ -88,7 +88,6 @@ class QueryRequest(BaseModel):
 
 @app.post("/chat")
 def chat(query: QueryRequest):
-    # 🧠 Format chat history
     history = query.chat_history
     formatted_history = []
     for i in range(0, len(history) - 1, 2):
@@ -96,10 +95,20 @@ def chat(query: QueryRequest):
         ai_msg = history[i + 1]["content"]
         formatted_history.append((user_msg, ai_msg))
 
-    # 🎯 Run the QA chain
+    # Pass only recent turns
+    formatted_history = formatted_history[-6:]
+
+    # Inject last known product context if found
+    last_product_context = ""
+    for turn in reversed(formatted_history):
+        if "₹" in turn[1] or "View Product:" in turn[1] or "backup" in turn[1].lower():
+            last_product_context = turn[1]
+            break
+
     result = qa_chain.invoke({
         "question": query.question,
-        "chat_history": formatted_history
+        "chat_history": formatted_history,
+        "context": last_product_context
     })
 
     answer = result["answer"]
@@ -118,7 +127,7 @@ def log_to_google_sheets(question: str, answer: str, user: str):
     try:
         timestamp = datetime.now().isoformat()
         user = "Anonymous"
-        
+
         payload = {
                 "timestamp": timestamp,
                 "user": user,
@@ -130,7 +139,7 @@ def log_to_google_sheets(question: str, answer: str, user: str):
             "https://script.google.com/macros/s/AKfycbyWYAokv_kJJjTcpxEMxGxUKHJqoJQAVwT4tdmfV47kwFRQO6gNNptJSAsIPlHTjQi1/exec",
             json=payload
         )
-        
+
         if response.status_code != 200:
             print(f"⚠️ Google Sheets logging failed: {response.status_code}")
     except Exception as e:
