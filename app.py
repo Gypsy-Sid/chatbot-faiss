@@ -25,7 +25,7 @@ system_template = (
     "If the user asks vague follow-ups like 'kitne ka hai' or 'ye acha hai kya', you must refer back to the last product discussed in the conversation."
     "If you're unsure or the question is unrelated to products, respond with:\n"
     "'I'm not sure about this. You can call or WhatsApp our support team on +91-9119077752 for help.'\n"
-    "If you recommend products, ONLY respond in this strict format below after you have given the text explaination. No markdown. No extra text. No explanation:\n\n"
+    "If you recommend products, ONLY respond in this strict format in the next line after you have given the text explaination first: No markdown. No extra text. No explanation in second line:\n\n"
     "**Product Name**\n**https://product-link.com**\n\nRepeat for each item. Do not include any other sentence."
     "One product per pair of lines. No markdown links. No extras."
 )
